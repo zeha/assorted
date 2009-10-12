@@ -1,0 +1,57 @@
+#!/usr/bin/ruby1.8
+################################################################################
+# This file is managed by puppet, module "gulli".
+# DO NOT EDIT, YOUR CHANGES WILL BE LOST.
+################################################################################
+#
+# This is a simple Sphinx CLI client which will search for a single word.
+# It's return codes are Nagios-compatible.
+#
+# Author: Christian Hofstaedtler <hofstaedtler@inqnet.at>
+# This file is covered by the Ruby License.
+
+if ARGV.length != 3
+	puts "Usage: check_sphinx HOSTNAME INDEXNAME SEARCHWORD"
+	puts "Example: check_sphinx localhost posts hi"
+	exit 3
+end
+
+ids = []
+
+begin
+	require 'sphinx'
+	begin
+		server = ARGV[0]
+		index = ARGV[1]
+		searchword = ARGV[2]
+
+		sphinx = Sphinx::Client.new
+		sphinx.SetServer(server, 3312)
+		result = sphinx.Query(searchword, index)
+		if result == false
+			puts "ERROR: Sphinx search failed (maybe index does not exist?)"
+			exit 2
+		end
+		ids = result['matches'].map { |match| match['id'] }
+	rescue Sphinx::SphinxConnectError
+		puts "ERROR: Could not connect: " + $!
+		exit 2
+	rescue
+		raise
+	end
+rescue SystemExit
+	# pass through exits
+	raise
+rescue Exception => detail
+	# this also catches errors from "require", etc.
+	puts "UNKNOWN: Error: " + $!
+	exit 3
+end
+
+if ids.length > 0
+	puts "OK: Sphinx returned #{ids.length} document IDs"
+	exit 0
+else
+	puts "WARNING: Sphinx returned no data"
+	exit 1
+end
