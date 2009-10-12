@@ -1,0 +1,39 @@
+HP DL360 G5/G6 automated firmware updates
+
+Directory layout:
+
+ls .
+CP011095.scexe*
+CP011291.scexe*
+CP011302.scexe*
+CP011308.scexe*
+CP011319.scexe*
+CP011340.scexe*
+CP011501.scexe*
+CP011535.scexe*
+CP011557.scexe*
+CP011640.scexe*
+CP011721.scexe*
+disks/
+DL360G5_BIOS.scexe -> CP011640.scexe*
+DL360G5_POWERMGMT.scexe -> CP011302.scexe*
+DL360G6_BIOS.scexe -> CP011501.scexe*
+DL360G6_POWERMGMT.scexe -> CP011308.scexe*
+firmware.sh*
+ILO2_FW.scexe -> CP011535.scexe*
+libstdc++2.10-glibc2.2_2.95.4-27_i386.deb
+SA_E200_FW.scexe -> CP011557.scexe*
+SA_P400_FW.scexe -> CP011319.scexe*
+SA_P410_FW.scexe -> CP011721.scexe*
+
+ls disks/
+CP009279.scexe*
+CP010297.scexe*
+CP011102.scexe*
+CP011615.scexe*
+
+Notes:
+CP*.scexe are HP firmware binaries. You need to download them from hp.com.
+libstdc++2.10-glibc2.2_2.95.4-27_i386.deb is needed on amd64 hosts. Get it 
+from your local Debian mirror and dpkg --force-architecture -i it before 
+running firmware.sh.
