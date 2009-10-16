@@ -1,0 +1,11 @@
+This uses a PowerDNS recursor to serve internal DNS records for 
+desktop computers, which get their IP from DHCP.
+
+Tested with python 2.5 + python-pyparsing 1.5.0-1, pdns-recursor 3.1.7, dhcp3-server 3.1.1-6+lenny3
+
+recursor.conf:
+auth-zones=internal.zone.name=/zones/internal.zone.name,10.10.10.in-addr.arpa=/zones/internal.zone.name.zone,11.10.10.in-addr.arpa=/zones/internal.zone.name.zone
+
+Cronjob:
+*/10 * * * * /path/to/generate-zone-from-leases.py internal.zone.name >/zones/internal.zone.name.zone && rec_control reload-zones >/dev/null
+
