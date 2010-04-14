@@ -1,3 +1,13 @@
+#!/usr/bin/python2.5
+#
+# Requires gdata-2.0.x library from
+# http://code.google.com/p/gdata-python-client/
+# (or easy_install gdata)
+#
+# Author: Christian Hofstaedtler <ch@zeha.at>
+# This file is licensed under the MIT license.
+
+
 import gdata.docs.service
 import gdata.spreadsheet.service
 
