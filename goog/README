@@ -1,0 +1,7 @@
+Reqs:
+pip install gdata
+python 2.6
+
+Run calendar-sync.py, edit ~/.calendar-sync.json.new and rename to ~/.calendar-sync.json.
+Rerun calendar-sync.py every hour or so.
+
