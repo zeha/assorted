@@ -1,0 +1,46 @@
+#
+# Copyright 2011 Christian Hofstaedtler.
+# Licensed under the MIT License
+#
+
+import httplib
+import json
+import sys, os.path
+import subprocess
+
+mirror_path = '/tmp'
+github_organization_name = 'grml'
+
+conn = httplib.HTTPSConnection("api.github.com")
+conn.request("GET", "/orgs/%s/repos" % github_organization_name)
+r1 = conn.getresponse()
+if r1.status != 200:
+  print "Github API Request failed with:", r1.status, r1.reason
+  sys.exit(1)
+
+success = True
+
+repos = json.loads(r1.read())
+for repo in repos:
+  name = repo['name']
+  git_url = repo['git_url']
+  local_path = os.path.join(mirror_path, name + '.git')
+  cwd = None
+  if not os.path.exists(local_path):
+    args = ['git', 'clone', '--mirror', git_url, local_path]
+  else:
+    args = ['git', 'remote', 'set-url', 'origin', git_url]
+    cwd = local_path
+  rc = subprocess.call(args, shell=False, cwd=cwd)
+  if rc != 0:
+    print "Mirroring repository %s from %s failed with return code %d. Args: %r" % (name, git_url, rc, args)
+    success = False
+  else:
+    args = ['git', 'remote', 'update', '--prune']
+    rc = subprocess.call(args, shell=False, cwd=local_path)
+    if rc != 0:
+      print "Mirroring repository %s from %s failed with return code %d. Args: %r" % (name, git_url, rc, args)
+      success = False
+
+if not success:
+  sys.exit(1)
