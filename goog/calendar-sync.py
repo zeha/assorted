@@ -23,6 +23,9 @@ print 'Syncing from %s to %s' % (cal_source, cal_dest)
 
 feed = client.GetCalendarEventFeed(uri=cal_source)
 for i, source_event in enumerate(feed.entry):
+    if len(source_event.when) == 0:
+        print '* [%s] "%s" Skipping, empty when list' % (i, source_event.title.text)
+        continue
     when = source_event.when[0]
     print '* [%s] "%s" from %s to %s' % (i, source_event.title.text, when.start, when.end)
     event_ref = 'ref=%s' % source_event.id.text.split('/events/')[1]
