@@ -1,0 +1,48 @@
+# -*- mode: python -*-
+#
+# Copyright 2011 Christian Hofstaedtler.
+# Licensed under the MIT License
+#
+
+import httplib
+import json
+import sys, os.path
+import subprocess
+
+AUTH = 'Basic XXXXXXXXXXXXXX'
+github_organization_name = 'grml'
+
+conn = httplib.HTTPSConnection("api.github.com")
+
+def query(url):
+  print url
+  conn.request("GET", url, "", headers={'Authorization': AUTH})
+  r1 = conn.getresponse()
+  if r1.status != 200:
+    print "Github API Request failed with:", r1.status, r1.reason
+    sys.exit(1)
+  return json.loads(r1.read())
+def post(url, data):
+  print url
+  b = json.dumps(data)
+  print b
+  conn.request("POST", url, b, headers={'Authorization': AUTH})
+  r1 = conn.getresponse()
+  if r1.status != 200 and r1.status != 201:
+    print "Github API Request failed with:", r1.status, r1.reason
+    sys.exit(1)
+  return json.loads(r1.read())
+
+repos = query("/orgs/%s/repos" % github_organization_name)
+
+success = True
+
+for repo in repos:
+  name = repo['name']
+  git_url = repo['git_url']
+  print name
+  print query("/repos/%s/%s/hooks" % (github_organization_name, name))
+  print post("/repos/%s/%s/hooks" % (github_organization_name, name), {"name": "cia", "config": {"project": "grml", "branch": name + ":%s"}, "active": True})
+
+if not success:
+  sys.exit(1)
