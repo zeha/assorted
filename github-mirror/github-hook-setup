@@ -11,6 +11,7 @@ import subprocess
 
 AUTH = 'Basic XXXXXXXXXXXXXX'
 github_organization_name = 'grml'
+email_moderator_pass = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 
 conn = httplib.HTTPSConnection("api.github.com")
 
@@ -43,6 +44,10 @@ for repo in repos:
   print name
   print query("/repos/%s/%s/hooks" % (github_organization_name, name))
   print post("/repos/%s/%s/hooks" % (github_organization_name, name), {"name": "cia", "config": {"project": "grml", "branch": name + ":%s"}, "active": True})
+  dest_email = 'git-commits@ml.grml.org'
+  if name.startswith('gsa-'):
+    dest_email = 'admin@ml.grml.org'
+  print post("/repos/%s/%s/hooks" % (github_organization_name, name), {"name": "email", "config": {"address": dest_email, "secret": email_moderator_pass, "send_from_author": 1}, "active": True})
 
 if not success:
   sys.exit(1)

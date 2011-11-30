@@ -14,18 +14,21 @@ import difflib
 mirror_path = os.path.expanduser('~/tmp-grml')
 github_organization_name = 'grml'
 
-conn = httplib.HTTPConnection("packages.grml.org")
-conn.request("GET", "/packages.yaml")
-r1 = conn.getresponse()
-if r1.status != 200:
-  print "packages.yaml download failed:", r1.status, r1.reason
-  sys.exit(1)
-
+all = open('gitolite.conf','r').read().split("\n")
 source_repos = []
-for r in yaml.load(r1.read()):
-  source_repos.append(r)
-for r in ["packages.grml.org","grml.org","grml-constitution","grml-infrastructure","grml-kernel","grml-mirrors","grml-server-setup"]:
-  source_repos.append(r)
+tmp = None
+for l in all:
+  l = l.strip().split()
+  if len(l) == 0: continue
+  if l[0] == 'repo':
+    tmp = l[1]
+  if tmp is not None:
+    if l[0] == 'R' and l[2] == 'daemon':
+      source_repos.append(tmp)
+      tmp = None
+    if l == '':
+      tmp = None
+
 source_repos = sorted(source_repos)
 
 conn = httplib.HTTPSConnection("api.github.com")
