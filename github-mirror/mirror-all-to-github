@@ -1,0 +1,71 @@
+#!/usr/bin/python
+#
+# Copyright 2011 Christian Hofstaedtler.
+# Licensed under the MIT License
+#
+
+import httplib
+import json
+import sys, os.path
+import subprocess
+import yaml
+import difflib
+
+mirror_path = os.path.expanduser('~/tmp-grml')
+github_organization_name = 'grml'
+
+conn = httplib.HTTPConnection("packages.grml.org")
+conn.request("GET", "/packages.yaml")
+r1 = conn.getresponse()
+if r1.status != 200:
+  print "packages.yaml download failed:", r1.status, r1.reason
+  sys.exit(1)
+
+source_repos = []
+for r in yaml.load(r1.read()):
+  source_repos.append(r)
+for r in ["packages.grml.org","grml.org","grml-constitution","grml-infrastructure","grml-kernel","grml-mirrors","grml-server-setup"]:
+  source_repos.append(r)
+source_repos = sorted(source_repos)
+
+conn = httplib.HTTPSConnection("api.github.com")
+conn.request("GET", "/orgs/%s/repos" % github_organization_name)
+r1 = conn.getresponse()
+if r1.status != 200:
+  print "Github API Request failed with:", r1.status, r1.reason
+  sys.exit(1)
+dest_repos_ = json.loads(r1.read())
+dest_repos = [r["name"] for r in dest_repos_]
+dest_repos = sorted(dest_repos)
+
+for line in difflib.unified_diff(source_repos, dest_repos, fromfile="grml", tofile="github"):
+  print line
+
+success = True
+
+for repo in source_repos:
+  name = repo
+  git_url = 'git://git.grml.org/%s.git' % name
+  local_path = os.path.join(mirror_path, name + '.git')
+  cwd = None
+  if not os.path.exists(local_path):
+    args = ['git', 'clone', '--mirror', git_url, local_path]
+  else:
+    args = ['git', 'remote', 'set-url', 'origin', git_url]
+    cwd = local_path
+  rc = subprocess.call(args, shell=False, cwd=cwd)
+  if rc != 0:
+    print "Mirroring repository %s from %s failed with return code %d. Args: %r" % (name, git_url, rc, args)
+    success = False
+  else:
+    args = ['git', 'remote', 'update', '--prune']
+    rc = subprocess.call(args, shell=False, cwd=local_path)
+    if rc != 0:
+      print "Mirroring repository %s from %s failed with return code %d. Args: %r" % (name, git_url, rc, args)
+      success = False
+  rc = subprocess.call(['git','push','--mirror','git@github.com:grml/%s.git'%name], shell=False, cwd=local_path)
+  if rc != 0:
+    print "Mirroring repository %s to github failed with return code %d. Args: %r" % (name, rc, args)
+
+if not success:
+  sys.exit(1)
