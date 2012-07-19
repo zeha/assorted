@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+bytes = 0
+
+ARGF.each do |line|
+        line.chomp!
+        if line.match(/^([a-z0-9.:-]+) ([0-9.:abcdef]+) - - \[.*\] "GET \/.* HTTP\/1\.." 200 ([0-9]+) ".*" ".*"$/)
+                bytes += $3.to_i
+        end
+end
+puts (bytes/1024/1024).to_s + "MB"
